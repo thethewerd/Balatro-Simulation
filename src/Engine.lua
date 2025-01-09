@@ -3,10 +3,14 @@
 -- The heart of this library: it replicates the game's score evaluation.
 
 function DV.SIM.run()
-   local null_ret = {score = {min=0, exact=0, max=0}, dollars = {min=0, exact=0, max=0}}
-   if #G.hand.highlighted < 1 then return null_ret end
+   return DV.SIM.run_with_args(G.hand.highlighted)
+end
 
-   DV.SIM.init()
+function DV.SIM.run_with_args(cards)
+   local null_ret = {score = {min=0, exact=0, max=0}, dollars = {min=0, exact=0, max=0}}
+   if #cards < 1 then return null_ret end
+
+   DV.SIM.init(cards)
 
    DV.SIM.manage_state("SAVE")
    DV.SIM.update_state_variables()
@@ -29,7 +33,7 @@ function DV.SIM.run()
    return DV.SIM.get_results()
 end
 
-function DV.SIM.init()
+function DV.SIM.init(cards)
    -- Reset:
    DV.SIM.running = {
       min   = {chips = 0, mult = 0, dollars = 0},
@@ -39,15 +43,15 @@ function DV.SIM.init()
    }
 
    -- Fetch metadata about simulated play:
-   local hand_name, _, poker_hands, scoring_hand, _ = G.FUNCS.get_poker_hand_info(G.hand.highlighted)
+   local hand_name, _, poker_hands, scoring_hand, _ = G.FUNCS.get_poker_hand_info(cards)
    DV.SIM.env.scoring_name = hand_name
 
    -- Identify played cards and extract necessary data:
    DV.SIM.env.played_cards = {}
    DV.SIM.env.scoring_cards = {}
    local is_splash_joker = next(find_joker("Splash"))
-   table.sort(G.hand.highlighted, function(a, b) return a.T.x < b.T.x end) -- Sorts by positional x-value to mirror card order!
-   for _, card in ipairs(G.hand.highlighted) do
+   table.sort(cards, function(a, b) return a.T.x < b.T.x end) -- Sorts by positional x-value to mirror card order!
+   for _, card in ipairs(cards) do
       local is_scoring = false
       for _, scoring_card in ipairs(scoring_hand) do
        -- Either card is scoring because it's part of the scoring hand,
